@@ -8,8 +8,9 @@ import (
 )
 
 type requestOptions struct {
-	method string
-	url    string
+	method  string
+	url     string
+	headers map[string]string
 }
 
 func (p *Purger) handlePurge(item purgeItem) {
@@ -46,14 +47,16 @@ func (p *Purger) handlePurge(item purgeItem) {
 					continue
 				}
 				ros = append(ros, requestOptions{
-					method: entry.Method,
-					url:    strings.ReplaceAll(strings.ReplaceAll(uri, "#url#", item.URL), "#variants#", variant),
+					method:  entry.Method,
+					url:     strings.ReplaceAll(strings.ReplaceAll(uri, "#url#", item.URL), "#variants#", variant),
+					headers: entry.Headers,
 				})
 
 				if strings.Contains(item.URL, "/wiki/") && variant != "" {
 					ros = append(ros, requestOptions{
-						method: entry.Method,
-						url:    strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(uri, "#url#", item.URL), "#variants#", ""), "/wiki/", "/"+variant+"/"),
+						method:  entry.Method,
+						url:     strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(uri, "#url#", item.URL), "#variants#", ""), "/wiki/", "/"+variant+"/"),
+						headers: entry.Headers,
 					})
 				}
 			}
@@ -63,7 +66,7 @@ func (p *Purger) handlePurge(item purgeItem) {
 	ros = uniq(ros)
 	ch := make(chan bool)
 	for _, ro := range ros {
-		go p.doRequest(ro.method, ro.url, ch)
+		go p.doRequest(ro.method, ro.url, ro.headers, ch)
 	}
 	for range ros {
 		<-ch
@@ -82,12 +85,17 @@ func uniq(input []requestOptions) (res []requestOptions) {
 	return
 }
 
-func (p *Purger) doRequest(method, url string, ch chan bool) {
+func (p *Purger) doRequest(method, url string, headers map[string]string, ch chan bool) {
 	req, err := http.NewRequest(method, url, nil)
 	if err != nil {
 		fmt.Printf("[Purger] Error sending purge request. %v %v\n", url, err)
 		ch <- false
 		return
+	}
+	if headers != nil {
+		for k, v := range headers {
+			req.Header.Set(k, v)
+		}
 	}
 	response, err := p.client.Do(req)
 	if err != nil {

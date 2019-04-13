@@ -7,6 +7,7 @@ A MediaWiki reverse-proxy cache purger for [52Poké Wiki](https://wiki.52poke.co
 
 * MediaWiki
 * Apache Kafka
+* librdkafka
 
 ## Configuration
 

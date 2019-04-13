@@ -13,10 +13,11 @@ import (
 
 // EntryConfig defines a purge configuration entry
 type EntryConfig struct {
-	Host     string   `toml:"host"`
-	Method   string   `toml:"method"`
-	Variants []string `toml:"variants"`
-	URIs     []string `toml:"uris"`
+	Host     string            `toml:"host"`
+	Method   string            `toml:"method"`
+	Variants []string          `toml:"variants"`
+	URIs     []string          `toml:"uris"`
+	Headers  map[string]string `toml:"headers"`
 }
 
 // Config defines the configuration of a purger

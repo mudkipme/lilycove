@@ -3,6 +3,9 @@ package purge
 import (
 	"fmt"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/mudkipme/lilycove/lib/queue"
@@ -47,7 +50,7 @@ func NewPurger(c *Config, q *queue.Queue) (*Purger, error) {
 	q.Process("purge", func(job *queue.Job) {
 		var item purgeItem
 		if err := job.Decode(&item); err != nil {
-			fmt.Printf("[Purge] Error decoding: %v\n", err)
+			fmt.Printf("[Purger] Error decoding: %v\n", err)
 			return
 		}
 		if time.Now().After(item.ScheduledTime.Add(time.Duration(purger.config.Expiry) * time.Millisecond)) {
@@ -61,17 +64,28 @@ func NewPurger(c *Config, q *queue.Queue) (*Purger, error) {
 	if err := q.Start(); err != nil {
 		return nil, err
 	}
+	ch := make(chan os.Signal)
+	signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-ch
+		q.Stop()
+		fmt.Println("[Purger] Purger stopped.\n")
+		os.Exit(0)
+	}()
 	return purger, nil
 }
 
 // Add a purge job
 func (p *Purger) Add(host string, url string) {
 	jobID := host + url
-	p.queue.Add("purge", purgeItem{
+	err := p.queue.Add("purge", purgeItem{
 		Host:          host,
 		URL:           url,
 		ScheduledTime: time.Now(),
 	}, &queue.JobOptions{
 		JobID: jobID,
 	})
+	if err != nil {
+		fmt.Printf("[Purger] Error adding purge job: %v\n", err)
+	}
 }

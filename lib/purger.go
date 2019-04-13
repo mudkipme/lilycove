@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/mudkipme/lilycove/lib/purge"
@@ -12,13 +13,10 @@ var mup sync.Mutex
 
 // DefaultPurger returns a default cache purger
 func DefaultPurger() *purge.Purger {
-	mup.Lock()
-	defer mup.Unlock()
+	return defaultPurger
+}
 
-	if defaultPurger != nil {
-		return defaultPurger
-	}
-
+func init() {
 	config := Config()
 	queue, err := queue.NewQueue(config.Queue)
 	if err != nil {
@@ -29,5 +27,5 @@ func DefaultPurger() *purge.Purger {
 		panic(err)
 	}
 	defaultPurger = purger
-	return purger
+	fmt.Println("[Purger] Purge queue inited.")
 }

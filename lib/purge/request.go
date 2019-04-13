@@ -85,20 +85,20 @@ func uniq(input []requestOptions) (res []requestOptions) {
 func (p *Purger) doRequest(method, url string, ch chan bool) {
 	req, err := http.NewRequest(method, url, nil)
 	if err != nil {
-		fmt.Printf("[Purge] Error sending purge request. %v %v\n", url, err)
+		fmt.Printf("[Purger] Error sending purge request. %v %v\n", url, err)
 		ch <- false
 		return
 	}
 	response, err := p.client.Do(req)
 	if err != nil {
-		fmt.Printf("[Purge] Error sending purge request. %v %v\n", url, err)
+		fmt.Printf("[Purger] Error sending purge request. %v %v\n", url, err)
 		ch <- false
 	} else {
 		response.Body.Close()
 		if response.StatusCode >= 200 && response.StatusCode < 300 {
-			fmt.Printf("[Purge] Purge success. %v\n", url)
+			fmt.Printf("[Purger] Purge success. %v\n", url)
 		} else if response.StatusCode != http.StatusNotFound && response.StatusCode >= 300 {
-			fmt.Printf("[Purge] Error sending purge request. %v %d\n", url, response.StatusCode)
+			fmt.Printf("[Purger] Error sending purge request. %v %d\n", url, response.StatusCode)
 		}
 		ch <- true
 	}

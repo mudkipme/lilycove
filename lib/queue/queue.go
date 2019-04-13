@@ -47,6 +47,7 @@ func NewQueue(config *Config) (*Queue, error) {
 	c, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers": config.Broker,
 		"group.id":          config.GroupID,
+		"auto.offset.reset": "earliest",
 	})
 	if err != nil {
 		return nil, err
@@ -141,6 +142,7 @@ func (queue *Queue) startConsume() {
 			}
 		}
 	}
+	queue.consumer.Close()
 }
 
 func (queue *Queue) handleMessage(km *kafka.Message) {

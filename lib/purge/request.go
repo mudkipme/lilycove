@@ -97,6 +97,9 @@ func (p *Purger) doRequest(method, url string, headers map[string]string, ch cha
 			req.Header.Set(k, v)
 		}
 	}
+	if host := req.Header.Get("Host"); host != "" {
+		req.Host = host
+	}
 	response, err := p.client.Do(req)
 	if err != nil {
 		fmt.Printf("[Purger] Error sending purge request. %v %v\n", url, err)
